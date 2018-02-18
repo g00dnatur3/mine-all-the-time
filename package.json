@@ -1,0 +1,15 @@
+{
+  "name": "mine-all-the-time",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cli-color": "^1.2.0",
+    "yargs": "^10.1.1"
+  }
+}
