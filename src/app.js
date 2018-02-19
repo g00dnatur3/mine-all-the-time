@@ -59,7 +59,7 @@ async function startMinning() {
           pass = '1600',
           port = 3333
 
-    await runCmd(cmd,`--server ${server} --user ${user} --pass ${pass} --port ${port}`)
+    await runCmd(cmd,`--server ${server} --user ${user} --pass ${pass} --port ${port} --fee 0`)
 }
 
 (async () => {
