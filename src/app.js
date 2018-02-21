@@ -7,6 +7,9 @@ const log = require('./log')(),
       util = require('util'),
       argv = require('yargs').argv
 
+
+const walletId = 't1KNQeq8pAUQi3aSJfbGGg9MaGXRU7SiT73';
+
 const miners = {
     dstm: path.resolve(__dirname, '../miners/dstm_0.5.7/zm'),
     ewbf: path.resolve(__dirname, '../miners/ewbf/miner')
@@ -54,7 +57,7 @@ async function setPowerLimit(gpu) {
 async function startMinning() {
     const cmd = miners[argv.miner],
           server = 'us1-zcash.flypool.org',
-          user = `t1KNQeq8pAUQi3aSJfbGGg9MaGXRU7SiT73.${argv.worker}`,
+          user = `${walletId}.${argv.worker}`,
           pass = '1600',
           port = 3333;
     let args = `--server ${server} --user ${user} --pass ${pass} --port ${port}`
@@ -62,17 +65,11 @@ async function startMinning() {
         args = args.concat(' --fee 0');
     }
     if (argv.miner === 'dstm') {
-
-      const myshareCmd = `${path.dirname(miners[argv.miner])}/myshare`;
-
-
-      console.log(myshareCmd);
-
-      process.exit();
-
+      const cwd = path.dirname(miners[argv.miner]);
+      execSync('sudo killall myshare'); // kill any dangling instance
+      runCmd('sudo', `${cwd}/myshare ${walletId}`, {cwd: cwd});
     }
-
-    await runCmd(cmd, args);
+    runCmd(cmd, args);
 }
 
 (async () => {

@@ -41,15 +41,16 @@ function prepareArgs(ARGS) {
 	return _args;
 }
 
-module.exports = (CMD, ARGS) => {
+module.exports = (CMD, ARGS, opts={}) => {
 
 	if (ARGS) ARGS = prepareArgs(ARGS);
 	else ARGS = [];
 	
 	log.info(`${CMD} ${ARGS.join(' ')}`);
+	opts = Object.assign(opts, {stdio: ['inherit', 'inherit', 'pipe']});
 
 	return new Promise((resolve, reject) => {
-		const child = spawn(CMD, ARGS,{stdio: ['inherit', 'inherit', 'pipe']});
+		const child = spawn(CMD, ARGS, opts);
 		child.stderr.on('data', data => log.warn(data.toString()));
 		child.on('error', err => log.err(err));
 		child.on('exit', code => {
