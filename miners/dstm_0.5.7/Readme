@@ -1,0 +1,47 @@
+myshare is a dev fee rerouter for dstm's zm Equihash miner for Nvidia GPUs.
+
+Supports version up to 0.5.7.
+
+Works for Linux, tested in Ubuntu 16.04
+uses glibc version 2.26-0ubuntu2.1
+
+
+What the hell is the programm doing?
+------------------------------------
+------------------------------------
+Reroute zm ssl connection to myshare --> 
+search for dev share -->
+send dev share with your walletid to flypool with worker name 'm'
+PROFIT!!! :)
+
+Dependencies:
+-------------
+-------------
+statically linked but still requires glibc (2.26-0ubuntu2.1)
+iptables
+
+
+Usage:
+------
+------
+before starting the miner, start myshare as root (required for routing)
+for example:
+sudo ./myshare yourTransparentZcashWalletID
+./zm --server eu1-zcash.flypool.org --port 3333 --user yourTransparentZcashWalletID.YourWorker
+
+myshare can be stopped with ctrl+c which disables the routing again
+to remove the routing after a crash, start as usual and stop it with ctrl+c
+
+
+User interface
+--------------
+--------------
+When a dev share got routed to you, you get a message on the console from myshare
+
+
+
+When u find myshare useful, please send us a donation to t1bk9mmB9ZgR4vjqqCxmj7U61hcWNa3J5PZ
+
+
+
+

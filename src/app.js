@@ -8,7 +8,7 @@ const log = require('./log')(),
       argv = require('yargs').argv
 
 const miners = {
-    dstm: path.resolve(__dirname, '../miners/dstm/zm'),
+    dstm: path.resolve(__dirname, '../miners/dstm_0.5.7/zm'),
     ewbf: path.resolve(__dirname, '../miners/ewbf/miner')
 }
 
@@ -54,13 +54,24 @@ async function setPowerLimit(gpu) {
 async function startMinning() {
     const cmd = miners[argv.miner],
           server = 'us1-zcash.flypool.org',
-          user = `t1UbXqBkGTsx5QZW9bvafRYj4navLTVtZPm.${argv.worker}`,
+          user = `t1KNQeq8pAUQi3aSJfbGGg9MaGXRU7SiT73.${argv.worker}`,
           pass = '1600',
           port = 3333;
     let args = `--server ${server} --user ${user} --pass ${pass} --port ${port}`
     if (argv.miner === 'ewbf') {
         args = args.concat(' --fee 0');
     }
+    if (argv.miner === 'dstm') {
+
+      const myshareCmd = `${path.dirname(miners[argv.miner])}/myshare`;
+
+
+      console.log(myshareCmd);
+
+      process.exit();
+
+    }
+
     await runCmd(cmd, args);
 }
 
