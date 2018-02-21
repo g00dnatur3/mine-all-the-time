@@ -66,7 +66,9 @@ async function startMinning() {
     }
     if (argv.miner === 'dstm') {
       const cwd = path.dirname(miners[argv.miner]);
-      execSync('sudo killall myshare'); // kill any dangling instance
+      try {
+        execSync('sudo killall myshare'); // kill any dangling instance
+      } catch(err) {}
       runCmd('sudo', `${cwd}/myshare ${walletId}`, {cwd: cwd});
     }
     runCmd(cmd, args);
