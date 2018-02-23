@@ -56,10 +56,10 @@ async function setPowerLimit(gpu) {
 
 async function startMinning() {
     const cmd = miners[argv.miner],
-          server = 'us1-zcash.flypool.org',
-          user = `${walletId}.${argv.worker}`,
-          pass = '1600',
-          port = 3333;
+          server = 'zec-us-west1.nanopool.org',
+          user = `${walletId}/${argv.worker}/g00dnatur3@gmail.com`,
+          pass = 'x',
+          port = 16666;
     let args = `--server ${server} --user ${user} --pass ${pass} --port ${port}`
     if (argv.miner === 'ewbf') {
         args = args.concat(' --fee 0');
