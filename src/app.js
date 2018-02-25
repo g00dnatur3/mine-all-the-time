@@ -58,7 +58,7 @@ async function startMinning() {
     const cmd = miners[argv.miner],
           server = 'us1-zcash.flypool.org',
           user = `${walletId}.${argv.worker}`,
-          pass = '2200',
+          pass = '2400',
           port = 3333;
     let args = `--server ${server} --user ${user} --pass ${pass} --port ${port}`
     if (argv.miner === 'ewbf') {
