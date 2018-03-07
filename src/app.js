@@ -40,8 +40,8 @@ function gpuCount() {
 }
 
 async function setOverclock(gpu) {
-    await runCmd('nvidia-settings', `-a [GPU:${gpu}]/GPUGraphicsClockOffset[3]=80`);
-    await runCmd('nvidia-settings', `-a [gpu:${gpu}]/GPUMemoryTransferRateOffset[3]=800`);
+    await runCmd('nvidia-settings', `-a [GPU:${gpu}]/GPUGraphicsClockOffset[3]=40`);
+    await runCmd('nvidia-settings', `-a [gpu:${gpu}]/GPUMemoryTransferRateOffset[3]=400`);
 }
 
 async function setPowerLimit(gpu) {
