@@ -8,7 +8,7 @@ const log = require('./log')(),
       argv = require('yargs').argv
 
 
-const walletId = 't1KNQeq8pAUQi3aSJfbGGg9MaGXRU7SiT73';
+const walletId = 't1YhuMYBupqkwr1KWKsmUyge1tHaJVtzfsa';
 
 const miners = {
     dstm: path.resolve(__dirname, '../miners/dstm_0.5.7/zm'),
