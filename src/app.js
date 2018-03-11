@@ -8,7 +8,7 @@ const log = require('./log')(),
       argv = require('yargs').argv
 
 
-const walletId = 't1YhuMYBupqkwr1KWKsmUyge1tHaJVtzfsa';
+const walletId = 't1KNQeq8pAUQi3aSJfbGGg9MaGXRU7SiT73';
 
 const miners = {
     dstm: path.resolve(__dirname, '../miners/dstm_0.5.7/zm'),
@@ -56,10 +56,10 @@ async function setPowerLimit(gpu) {
 
 async function startMinning() {
     const cmd = miners[argv.miner],
-          server = 'us1-zcash.flypool.org',
-          user = `${walletId}.${argv.worker}`,
+          server = '192.168.1.27',
+          user = `${argv.worker}`,
           pass = '2000',
-          port = 3333;
+          port = 8000;
     let args = `--server ${server} --user ${user} --pass ${pass} --port ${port}`
     if (argv.miner === 'ewbf') {
         args = args.concat(' --fee 0');
