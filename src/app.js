@@ -108,7 +108,7 @@ async function startMinning() {
 
     runCmd(cmd, args, {onStderr: onStderr})
     .then(exitCode => {
-      if (exitCode && exitCode > 0) setTimeout(startMinning, 15000);
+      if (exitCode && exitCode > 0) setTimeout(startMinning, 10000);
     });
 }
 
