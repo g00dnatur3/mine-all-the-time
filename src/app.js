@@ -55,7 +55,7 @@ async function setPowerLimit(gpu) {
 }
 
 const restartNetwork = (() => {
-  const ONE_MIN = 60 * 1000;
+  const TWO_MIN = 60 * 1000 * 2;
   let lastReset = null;
   const reset = () => {
     log.info('!!! RESTARTING NETWORK !!!');
@@ -64,7 +64,7 @@ const restartNetwork = (() => {
   }
   return function() {
     if (!lastReset) reset();
-    else if (Date.now() - lastReset > ONE_MIN) reset();
+    else if (Date.now() - lastReset > TWO_MIN) reset();
   }
 })();
 
