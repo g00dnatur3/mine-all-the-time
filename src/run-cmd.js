@@ -41,7 +41,7 @@ function prepareArgs(ARGS) {
 	return _args;
 }
 
-module.exports = (CMD, ARGS, opts={}) => {
+module.exports = (CMD, ARGS=null, opts={onStderr: null}) => {
 
 	if (ARGS) ARGS = prepareArgs(ARGS);
 	else ARGS = [];
@@ -51,10 +51,14 @@ module.exports = (CMD, ARGS, opts={}) => {
 
 	return new Promise((resolve, reject) => {
 		const child = spawn(CMD, ARGS, opts);
-		child.stderr.on('data', data => log.warn(data.toString()));
+		child.stderr.on('data', data => {
+			log.warn(data.toString())
+			if (opts.onStderr) opts.onStderr(data);
+		});
 		child.on('error', err => log.err(err));
 		child.on('exit', code => {
-			log.info(`exit code: ${code}`);
+			console.log();
+			log.info(`[${clc.bold(`${CMD} ${ARGS.join(' ')}`)}] exit code: ${code}`);
 			resolve(code);
 		});
 	});

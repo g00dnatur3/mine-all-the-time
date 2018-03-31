@@ -54,6 +54,20 @@ async function setPowerLimit(gpu) {
     await runCmd('sudo', `nvidia-smi -i ${gpu} -pl ${target}`);
 }
 
+const restartNetwork = (() => {
+  const ONE_MIN = 60 * 1000;
+  let lastReset = null;
+  const reset = () => {
+    log.info('!!! RESTARTING NETWORK !!!');
+    lastReset = Date.now();
+    runCmd('sudo', '/etc/init.d/network-manager restart');
+  }
+  return function() {
+    if (!lastReset) reset();
+    else if (Date.now() - lastReset > ONE_MIN) reset();
+  }
+})();
+
 async function startMinning() {
     const cmd = miners[argv.miner],
           server = '192.168.1.27',
@@ -71,7 +85,31 @@ async function startMinning() {
       } catch(err) {}
       runCmd('sudo', `${cwd}/myshare ${walletId}`, {cwd: cwd});
     }
-    runCmd(cmd, args);
+
+    let prevData = null
+
+    const onStderr = data => {
+      let _data;
+      if (prevData) _data = prevData.toString() + data.toString();
+      else _data = data.toString();
+      // we check a a buffer of twos, just incase the
+      // what we are seaching for spans two buffs
+      prevData = data;
+      if (_data.indexOf('Network is unreachable') !== -1) {
+        restartNetwork();
+      }
+      if (_data.indexOf('ssl timeout r:2') !== -1) {
+        restartNetwork();
+      }
+      if (_data.indexOf('send timeout') !== -1) {
+        restartNetwork();
+      }
+    }
+
+    runCmd(cmd, args, {onStderr: onStderr})
+    .then(exitCode => {
+      if (exitCode && exitCode > 0) setTimeout(startMinning, 15000);
+    });
 }
 
 (async () => {
