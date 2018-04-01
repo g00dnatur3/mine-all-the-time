@@ -1,6 +1,6 @@
 const log = require('./log')();
 const util = require('util');
-const exec = util.promisify(require('child_process').exec);
+const { execSync } = require('child_process');
 
 // the fastest and most accurate getType I have come accross...
 if (!Object.getType) {
@@ -84,10 +84,34 @@ const killProcess = (process, name) => {
 	})
 }
 
-const httpError = (status, msg) => {
-	const err = new Error(msg);
-	err.status = status;
-	return err;
+function killAllProcessesWithNameSync(names) {
+	const killall = name => {
+		try {
+			var result = execSync('ps -A | grep ' + name).toString();
+			result.split('\n').forEach(function(line) {
+				line = line.trim();
+				var pid = line.substring(0, line.indexOf(' '));
+				if (pid.length > 0) {
+					log.info('[killAllWithName] killing -9 ' + name + ', pid: ' + pid);
+					execSync('sudo kill -9 ' + pid);
+				}
+			})
+		} catch (err) {
+			err = err.toString();
+			if (err.indexOf('Command failed') === -1) {
+				console.log(err);
+			} else {
+				//here if no processes with name
+			}
+		}
+	}
+	if (typeof names === 'string') {
+		killall(names);
+	} else {
+		names.forEach(function(name) {
+			killall(name);
+		});
+	}
 }
 
 module.exports = {
@@ -108,11 +132,9 @@ module.exports = {
 
 	killProcess: killProcess,
 
+	killAllProcessesWithNameSync: killAllProcessesWithNameSync,
+
 	injectOptionalOpts: injectOptionalOpts,
-
-	httpError: httpError,
-
-	exec: exec,
 
 	deepClone: obj => JSON.parse(JSON.stringify(obj)),
 

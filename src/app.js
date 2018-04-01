@@ -80,9 +80,7 @@ async function startMinning() {
     }
     if (argv.miner === 'dstm') {
       const cwd = path.dirname(miners[argv.miner]);
-      try {
-        execSync('sudo killall myshare'); // kill any dangling instance
-      } catch(err) {}
+      utils.killAllProcessesWithNameSync('myshare');
       runCmd('sudo', `${cwd}/myshare ${walletId}`, {cwd: cwd});
     }
 
