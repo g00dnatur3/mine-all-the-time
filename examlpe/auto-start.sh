@@ -1,0 +1,1 @@
+bash -c "sleep 10 && xfce4-terminal --command /home/user/start_miner.sh"
