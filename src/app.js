@@ -88,7 +88,7 @@ async function startMinning() {
 
     const onStderr = data => {
       let _data;
-      if (prevData) _data = prevData.toString() + data.toString();
+      if (prevData) _data = prevData + data;
       else _data = data.toString();
       // we check a a buffer of twos, just incase the
       // what we are seaching for spans two buffs

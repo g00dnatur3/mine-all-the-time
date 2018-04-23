@@ -9,17 +9,17 @@ function prepareArgs(ARGS) {
 	ARGS = ARGS.split(/\s+/);
 
 	const _args = [];
-	let lookingForEnding = null;
+	let quotes = null;
 	let argStr = '';
 
 	ARGS.forEach(arg => {
-		if (!lookingForEnding) {
+		if (!quotes) {
 			if (arg.startsWith("'") && !arg.endsWith("'")) {
-				lookingForEnding = "'";
+				quotes = "'";
 				argStr += ` ${arg.substring(1)}`;
 			}
 			else if (arg.startsWith('"') && !arg.endsWith('"')) {
-				lookingForEnding = '"';
+				quotes = '"';
 				argStr += ` ${arg.substring(1)}`;
 			}
 			else {
@@ -28,11 +28,11 @@ function prepareArgs(ARGS) {
 		}
 		else {
 			argStr += ` ${arg}`;
-			if (arg.endsWith(lookingForEnding)) {
+			if (arg.endsWith(quotes)) {
 				argStr = argStr.trim();
 				argStr = argStr.substring(0, argStr.length-1);
-				_args.push(argStr);
-				lookingForEnding = null;
+				_args.push(quotes + argStr + quotes);
+				quotes = null;
 				argStr = '';
 			}
 		}
@@ -41,24 +41,35 @@ function prepareArgs(ARGS) {
 	return _args;
 }
 
-module.exports = (CMD, ARGS=null, opts={onStderr: null}) => {
+module.exports = (CMD, ARGS=null, opts={onStderr: null, onStdout: null}) => {
 
 	if (ARGS) ARGS = prepareArgs(ARGS);
 	else ARGS = [];
 	
 	log.info(`${CMD} ${ARGS.join(' ')}`);
-	opts = Object.assign(opts, {stdio: ['inherit', 'inherit', 'pipe']});
+	
+	const stdio = (!opts.onStdout) ? ['inherit', 'inherit', 'pipe'] : ['inherit', 'pipe', 'pipe'];
+	opts = Object.assign(opts, {stdio: stdio});
 
 	return new Promise((resolve, reject) => {
 		const child = spawn(CMD, ARGS, opts);
+		if (opts.onStdout) {
+			child.stdout.on('data', data => {
+				data = data.toString(), log.info(data);
+				if (opts.onStdout) opts.onStdout(data);
+			});
+		}
 		child.stderr.on('data', data => {
-			log.warn(data.toString())
+			data = data.toString(), log.warn(data);
 			if (opts.onStderr) opts.onStderr(data);
 		});
 		child.on('error', err => log.err(err));
 		child.on('exit', code => {
 			console.log();
-			log.info(`[${clc.bold(`${CMD} ${ARGS.join(' ')}`)}] exit code: ${code}`);
+			const maxLength = 80;
+			const _cmd = `${CMD} ${ARGS.join(' ')}`.substring(0,maxLength);
+			let dotdotdot = _cmd.length === maxLength ? '...' : '';
+			log.info(`${clc.bold('EXIT_CODE: '+code)}, CMD: ${_cmd + dotdotdot}`);
 			resolve(code);
 		});
 	});
