@@ -1,7 +1,7 @@
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 
-async function createIpToMacAddressMapping() {
+async function discover() {
 	function parseOutMapping(data) {
 		const lines = data.trim().split('\n')
 		return lines.reduce((result, line) => {
@@ -17,7 +17,16 @@ async function createIpToMacAddressMapping() {
 	return parseOutMapping(result.stdout)
 }
 
-(async () => {
-	const ipToMac = await createIpToMacAddressMapping()
-	console.log(ipToMac);
-})().catch(err => console.log(err));
+//(async () => {
+//	const ipToMac = await createIpToMacAddressMapping()
+//	console.log(ipToMac);
+//})().catch(err => console.log(err));
+
+async function wakeUp(mac) {
+	await exec(`sudo fing -w ${mac}`)
+}
+
+module.exports = {
+	discover,
+	wakeUp
+}

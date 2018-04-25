@@ -31,7 +31,7 @@ function prepareArgs(ARGS) {
 			if (arg.endsWith(quotes)) {
 				argStr = argStr.trim();
 				argStr = argStr.substring(0, argStr.length-1);
-				_args.push(quotes + argStr + quotes);
+				_args.push(argStr);
 				quotes = null;
 				argStr = '';
 			}
