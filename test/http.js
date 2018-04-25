@@ -7,7 +7,8 @@ module.exports = {
             method: 'GET',
             uri: url,
             json: true,
-            resolveWithFullResponse: true
+            resolveWithFullResponse: true,
+            timeout: 2000
         });
 	},
 
@@ -17,7 +18,8 @@ module.exports = {
             uri: url,
             body: body,
             json: true,
-            resolveWithFullResponse: true
+            resolveWithFullResponse: true,
+            timeout: 2000
         });
 	}
 

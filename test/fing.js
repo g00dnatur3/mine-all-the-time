@@ -1,20 +1,27 @@
-const util = require('util');
-const exec = util.promisify(require('child_process').exec);
+const util = require('util'),
+      exec = util.promisify(require('child_process').exec),
+      ip = require('ip'),
+      log = require('../src/log')();
+
+const myIp = ip.address();
 
 async function discover() {
+	log.info('discover online nodes...');
 	function parseOutMapping(data) {
 		const lines = data.trim().split('\n')
 		return lines.reduce((result, line) => {
 			line = line.substring(10);
 			let idx = line.indexOf(' ');
 			const ip = line.substring(0, idx);
-			const mac = line.substring(idx).replace(/[^\w]/g,'');
-			result[ip] = mac;
+			if (ip !== myIp) {
+				const mac = line.substring(idx).replace(/[^\w]/g,'');
+				result.push({ip, mac});
+			}
 			return result;
-		}, {});	
+		}, []);	
 	}
-	const result = await exec('sudo fing --rounds 1 | grep "^|  UP"')
-	return parseOutMapping(result.stdout)
+	const result = await exec('sudo fing --rounds 1 | grep "^|  UP"');
+	return parseOutMapping(result.stdout);
 }
 
 //(async () => {
