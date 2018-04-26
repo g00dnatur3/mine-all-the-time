@@ -78,7 +78,7 @@ async function processNode(node) {
 			await http.doPOST(`http://${node.ip}:${port}/shutdown`)
 		} catch(err) { log.err(err); }
 	}
-	else {
+	else if (node.online === false) {
 		// SEND WOL MAGIC PACKET TO TURN ON COMPUTER
 		log.info('== SENDING WAKE-UP (WOL) TO NODE => ' + node.mac);
 		console.log()
