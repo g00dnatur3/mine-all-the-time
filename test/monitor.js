@@ -68,9 +68,16 @@ async function processNode(node) {
 //	}
 }
 
-process.on('uncaughtException', function(err) {
-	  console.log('Caught exception: ' + err);
-	});
+async function hasWifi() {
+	const util = require('util')
+	exec = util.promisify(require('child_process').exec)
+	let wifi = false;
+	try {
+		const result = await exec('sudo iwconfig | grep "ESSID"');
+		if (result.stdout) wifi = true;
+	} catch (err) { log.err(`== NORMAL ERROR IF NO WIFI ==> ${err}`)}
+	return wifi
+}
 
 (async () => {
 	
@@ -79,26 +86,12 @@ process.on('uncaughtException', function(err) {
 //	for (ip in miningNodes) {
 //		processNode(miningNodes[ip]);
 //	}
+
 	
-	var wifi = require('node-wifi');
+	const wifi = await hasWifi()
 	
-	//console.log(wifi)
+	console.log('wifi = ' + wifi)
 	
-	wifi.init({
-	    iface : null // network interface, choose a random wifi interface if set to null
-	});
-	
-	try {
-		wifi.getCurrentConnections((err, blah) => {
-			if (err) log.err(err);
-			else {
-				
-			}
-		})
-	}
-	catch (err) {
-		
-	}
 
 })().catch(err => console.log(err))
 

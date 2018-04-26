@@ -21,4 +21,16 @@ app.post('/shutdown', function(req, res) {
 	});
 });
 
+//iwconfig | grep "ESSID"
+async function hasWifi() {
+	const util = require('util')
+	exec = util.promisify(require('child_process').exec)
+	let wifi = false;
+	try {
+		const result = await exec('sudo iwconfig | grep "ESSID"');
+		if (result.stdout) wifi = true;
+	} catch (err) { log.err(`== NORMAL ERROR IF NO WIFI ==> ${err}`)}
+	return wifi
+}
+
 app.listen(3000, () => console.log('control-server listening on port 3000'))
