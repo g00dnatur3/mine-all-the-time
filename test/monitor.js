@@ -68,6 +68,23 @@ async function processNode(node) {
 	}
 }
 
+
+async function hasWifi() {
+	const util = require('util')
+	exec = util.promisify(require('child_process').exec)
+	let wifi = false;
+	try {
+		const result = await exec('sudo iwconfig | grep "ESSID"');
+		console.log(result.stdout);
+		if (result.stdout 
+				&& result.stdout.indexOf('ESSID:off') === -1) {
+			wifi = true;
+		}
+	} catch (err) { log.err(`== NORMAL ERROR IF NO WIFI ==> ${err}`)}
+	return wifi
+}
+
+
 (async () => {
 	
 //	await discoverMiningNodes()
@@ -75,6 +92,8 @@ async function processNode(node) {
 //	for (ip in miningNodes) {
 //		processNode(miningNodes[ip]);
 //	}
+	
+	console.log(await hasWifi())
 
 })().catch(err => console.log(err))
 
