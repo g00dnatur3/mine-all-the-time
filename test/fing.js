@@ -7,6 +7,7 @@ const myIp = ip.address();
 
 async function discover() {
 	log.info('discover online nodes...');
+	console.log();
 	function parseOutMapping(data) {
 		const lines = data.trim().split('\n')
 		return lines.reduce((result, line) => {

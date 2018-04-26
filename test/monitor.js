@@ -3,6 +3,8 @@ const fing = require('./fing'),
       fs = require('fs'),
       path = require('path'),
       exitHook = require('exit-hook'),
+      util = require('util'),
+      exec = util.promisify(require('child_process').exec),
       log = require('../src/log')();
 
 const defaultConfig = require('./config');
@@ -12,14 +14,20 @@ const miningNodesFile = path.resolve(__dirname, 'miningNodes.json');
 const port = 3000;
 
 const miningNodes = loadMiningNodes();
+
 log.info('== LOADED MINING NODES ==')
 console.log(JSON.stringify(miningNodes, null, 2));
+console.log();
 
 exitHook(() => {
 	log.info('exitHook');
+	saveNodes();
+});
+
+function saveNodes() {
 	log.info(`saving nodes to -> ${miningNodesFile}`);
 	fs.writeFileSync(miningNodesFile, JSON.stringify(miningNodes));
-});
+}
 
 function loadMiningNodes() {
 	if (fs.existsSync(miningNodesFile)) {
@@ -30,7 +38,16 @@ function loadMiningNodes() {
 	}
 }
 
+
+function setMiningNodesOffline() {
+	for (ip in miningNodes) {
+		miningNodes[ip].online = false;
+	}
+}
+
 async function discoverMiningNodes() {
+	// assume nodes go offline all the time
+	setMiningNodesOffline();
 	const nodes = await fing.discover();
 	for (let i=0; i<nodes.length; i++) {
 		const node = nodes[i]
@@ -41,6 +58,7 @@ async function discoverMiningNodes() {
 			log.info(`got response from node -> ${node.ip}`);
 			const miningNode = Object.assign(node, defaultConfig, res.body);
 			miningNodes[node.ip] = miningNode;
+			miningNodes[node.ip].online = true;
 		} catch(err) {
 			if (!err.name || err.name !== 'RequestError') log.err(err);
 		}
@@ -54,59 +72,40 @@ async function processNode(node) {
 	const currentHour = new Date().getHours();
 	if (currentHour >= beginShutdown && currentHour < endShutdown) {
 		// SEND REQUEST TO SHUT OFF COMPUTER
-		log.info('== POWER-OFF-NODE VIA HTTP -> ' + node.ip);
+		log.info('== SENDING SHUTDOWN REQUEST TO NODE -> ' + node.ip);
+		console.log()
 		try {
 			await http.doPOST(`http://${node.ip}:${port}/shutdown`)
 		} catch(err) { log.err(err); }
 	}
 	else {
 		// SEND WOL MAGIC PACKET TO TURN ON COMPUTER
-		log.info('== POWER-ON-NODE VIA WOL -> ' + node.ip);
+		log.info('== SENDING WAKE-UP (WOL) TO NODE => ' + node.mac);
+		console.log()
 		try {
 			await fing.wakeUp(node.mac);
 		} catch (err) { log.err(err); }
 	}
 }
 
+const MONITOR_INTERVAL = 120;
 
-async function hasWifi() {
-	const util = require('util')
-	exec = util.promisify(require('child_process').exec)
-	let wifi = false;
-	try {
-		const result = await exec('sudo iwconfig | grep "ESSID"');
-		console.log(result.stdout);
-		if (result.stdout 
-				&& result.stdout.indexOf('ESSID:off') === -1) {
-			wifi = true;
-		}
-	} catch (err) { log.err(`== NORMAL ERROR IF NO WIFI ==> ${err}`)}
-	return wifi
+async function doMonitorCycleLoop() {
+	log.info('== START MONITOR_CYCLE ==> ' + new Date())
+	console.log();
+	await discoverMiningNodes()
+	log.info('== CURRENT MINING NODES ==> ' + new Date())
+	console.log(miningNodes)
+	console.log()
+	for (ip in miningNodes) {
+		await processNode(miningNodes[ip]);
+	}
+	log.info('== END MONITOR_CYCLE ==> ' + new Date())
+	console.log()
+	//setTimeout(doMonitorCycleLoop, MONITOR_INTERVAL)
+	log.info(`sleeping for ${MONITOR_INTERVAL} seconds`);
+	await exec(`sleep ${MONITOR_INTERVAL}`);
+	await doMonitorCycleLoop();
 }
 
-
-(async () => {
-	
-//	await discoverMiningNodes()
-//	
-//	for (ip in miningNodes) {
-//		processNode(miningNodes[ip]);
-//	}
-	
-	console.log(await hasWifi())
-
-})().catch(err => console.log(err))
-
-//class Monitor {
-//	constructor() {
-//		//
-//	}
-//	start() {
-//		
-//	}
-//	stop() {
-//		
-//	}
-//}
-//
-//const mon = new Monitor()
+doMonitorCycleLoop()
