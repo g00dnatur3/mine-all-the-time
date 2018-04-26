@@ -13,10 +13,10 @@ async function discover() {
 			line = line.substring(10);
 			let idx = line.indexOf(' ');
 			const ip = line.substring(0, idx);
-			//if (ip !== myIp) {
+			if (ip !== myIp) {
 				const mac = line.substring(idx).replace(/[^\w]/g,'');
 				result.push({ip, mac});
-			//}
+			}
 			return result;
 		}, []);	
 	}

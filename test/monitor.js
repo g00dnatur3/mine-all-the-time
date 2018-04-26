@@ -1,13 +1,34 @@
 const fing = require('./fing'),
       http = require('./http'),
+      fs = require('fs'),
+      path = require('path'),
+      exitHook = require('exit-hook'),
       log = require('../src/log')();
 
 const defaultConfig = require('./config');
+
+const miningNodesFile = path.resolve(__dirname, 'miningNodes.json');
 	
 const port = 3000;
 
-// we use a map to avoid duplicate, ip->node_object
-const miningNodes = {}
+const miningNodes = loadMiningNodes();
+log.info('== LOADED MINING NODES ==')
+console.log(JSON.stringify(miningNodes, null, 2));
+
+exitHook(() => {
+	log.info('exitHook');
+	log.info(`saving nodes to -> ${miningNodesFile}`);
+	fs.writeFileSync(miningNodesFile, JSON.stringify(miningNodes));
+});
+
+function loadMiningNodes() {
+	if (fs.existsSync(miningNodesFile)) {
+		log.info(`loading nodes from -> ${miningNodesFile}`);
+		return require(miningNodesFile);
+	} else {
+		return {};
+	}
+}
 
 async function discoverMiningNodes() {
 	const nodes = await fing.discover();
@@ -31,22 +52,52 @@ async function processNode(node) {
 	const beginShutdown = node.shutdown.split('-')[0];
 	const endShutdown = node.shutdown.split('-')[1];
 	const currentHour = new Date().getHours();
-	if (currentHour >= beginShutdown && currentHour < endShutdown) {
+//	if (currentHour >= beginShutdown && currentHour < endShutdown) {
 		// SEND REQUEST TO SHUT OFF COMPUTER
-		console.log('== POWER-OFF-NODE VIA HTTP -> ' + node.ip);
-	}
-	else {
-		// SEND WOL MAGIC PACKET TO TURN ON COMPUTER
-		console.log('== POWER-ON-NODE VIA WOL -> ' + node.ip);
-	}
+		log.info('== POWER-OFF-NODE VIA HTTP -> ' + node.ip);
+		try {
+			await http.doPOST(`http://${node.ip}:${port}/shutdown`)
+		} catch(err) { log.err(err); }
+//	}
+//	else {
+//		// SEND WOL MAGIC PACKET TO TURN ON COMPUTER
+//		log.info('== POWER-ON-NODE VIA WOL -> ' + node.ip);
+//		try {
+//			await fing.wakeUp(node.mac);
+//		} catch (err) { log.err(err); }
+//	}
 }
+
+process.on('uncaughtException', function(err) {
+	  console.log('Caught exception: ' + err);
+	});
 
 (async () => {
 	
-	await discoverMiningNodes()
+//	await discoverMiningNodes()
+//	
+//	for (ip in miningNodes) {
+//		processNode(miningNodes[ip]);
+//	}
 	
-	for (ip in miningNodes) {
-		processNode(miningNodes[ip]);
+	var wifi = require('node-wifi');
+	
+	//console.log(wifi)
+	
+	wifi.init({
+	    iface : null // network interface, choose a random wifi interface if set to null
+	});
+	
+	try {
+		wifi.getCurrentConnections((err, blah) => {
+			if (err) log.err(err);
+			else {
+				
+			}
+		})
+	}
+	catch (err) {
+		
 	}
 
 })().catch(err => console.log(err))
