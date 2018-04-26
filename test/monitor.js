@@ -27,14 +27,28 @@ async function discoverMiningNodes() {
 	}
 }
 
+async function processNode(node) {
+	const beginShutdown = node.shutdown.split('-')[0];
+	const endShutdown = node.shutdown.split('-')[1];
+	const currentHour = new Date().getHours();
+	if (currentHour >= beginShutdown && currentHour < endShutdown) {
+		// SEND REQUEST TO SHUT OFF COMPUTER
+		console.log('== POWER-OFF-NODE VIA HTTP -> ' + node.ip);
+	}
+	else {
+		// SEND WOL MAGIC PACKET TO TURN ON COMPUTER
+		console.log('== POWER-ON-NODE VIA WOL -> ' + node.ip);
+	}
+}
+
 (async () => {
 	
-	//await http.doGET('http://'+)
+	await discoverMiningNodes()
 	
-	await doInterval()
-	
-	console.log('end')
-	
+	for (ip in miningNodes) {
+		processNode(miningNodes[ip]);
+	}
+
 })().catch(err => console.log(err))
 
 //class Monitor {
