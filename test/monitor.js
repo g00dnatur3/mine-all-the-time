@@ -52,31 +52,20 @@ async function processNode(node) {
 	const beginShutdown = node.shutdown.split('-')[0];
 	const endShutdown = node.shutdown.split('-')[1];
 	const currentHour = new Date().getHours();
-//	if (currentHour >= beginShutdown && currentHour < endShutdown) {
+	if (currentHour >= beginShutdown && currentHour < endShutdown) {
 		// SEND REQUEST TO SHUT OFF COMPUTER
 		log.info('== POWER-OFF-NODE VIA HTTP -> ' + node.ip);
 		try {
 			await http.doPOST(`http://${node.ip}:${port}/shutdown`)
 		} catch(err) { log.err(err); }
-//	}
-//	else {
-//		// SEND WOL MAGIC PACKET TO TURN ON COMPUTER
-//		log.info('== POWER-ON-NODE VIA WOL -> ' + node.ip);
-//		try {
-//			await fing.wakeUp(node.mac);
-//		} catch (err) { log.err(err); }
-//	}
-}
-
-async function hasWifi() {
-	const util = require('util')
-	exec = util.promisify(require('child_process').exec)
-	let wifi = false;
-	try {
-		const result = await exec('sudo iwconfig | grep "ESSID"');
-		if (result.stdout) wifi = true;
-	} catch (err) { log.err(`== NORMAL ERROR IF NO WIFI ==> ${err}`)}
-	return wifi
+	}
+	else {
+		// SEND WOL MAGIC PACKET TO TURN ON COMPUTER
+		log.info('== POWER-ON-NODE VIA WOL -> ' + node.ip);
+		try {
+			await fing.wakeUp(node.mac);
+		} catch (err) { log.err(err); }
+	}
 }
 
 (async () => {
@@ -86,12 +75,6 @@ async function hasWifi() {
 //	for (ip in miningNodes) {
 //		processNode(miningNodes[ip]);
 //	}
-
-	
-	const wifi = await hasWifi()
-	
-	console.log('wifi = ' + wifi)
-	
 
 })().catch(err => console.log(err))
 

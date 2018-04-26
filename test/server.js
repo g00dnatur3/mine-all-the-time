@@ -1,8 +1,9 @@
 const fs = require('fs'),
 	  util = require('util'),
 	  express = require('express'),
-      powerOff = require('power-off'),
-	  config = require('./config');
+      _powerOff = require('power-off'),
+	  config = require('./config'),
+	  log = require('../src/log')();
 		  
 const app = express()
 
@@ -10,18 +11,23 @@ app.get('/hello', (req, res) => {
 	res.send(JSON.stringify(config));
 });
 
-app.post('/shutdown', function(req, res) {
-	powerOff(function(err, stderr, stdout) {
-		if (err) {
-		  util.log(err);
-		  res.status(500).json({ error: 'Can\'t run power-off' });
-		} else {
-		  res.end();
-		}
-	});
+function powerOff() {
+	return new Promise((resolve, reject) => {
+		_powerOff(function(err, stderr, stdout) {
+			if (err) reject(err);
+			else resolve();
+		});
+	})
+}
+
+app.post('/shutdown', async (req, res) => {
+	try {
+		// ONLY SHUTDOWN IF NOT CONNTECTED VIA WIFI
+		const wifiExists = hasWifi();
+		if (!wifiExists) await powerOff();
+	} catch (err) { log.err(err) }
 });
 
-//iwconfig | grep "ESSID"
 async function hasWifi() {
 	const util = require('util')
 	exec = util.promisify(require('child_process').exec)
