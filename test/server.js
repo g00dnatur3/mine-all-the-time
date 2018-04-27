@@ -10,10 +10,14 @@ const app = express();
 const isWin = process.platform === 'win32';
 
 app.get('/hello', (req, res) => {
+	log.info('== HELLO REQUESTED ==');
+	console.log();
 	res.send(JSON.stringify(config));
 });
 
 function powerOff() {
+	log.info('== POWER OFF ==');
+	console.log();
 	return new Promise((resolve, reject) => {
 		_powerOff(function(err, stderr, stdout) {
 			if (err) reject(err);
@@ -23,10 +27,17 @@ function powerOff() {
 }
 
 app.post('/shutdown', async (req, res) => {
+	log.info('== SHUTDOWN REQUESTED ==');
+	console.log();
 	try {
 		// ONLY SHUTDOWN IF NOT CONNTECTED VIA WIFI
 		const wifiExists = hasWifi();
-		if (!wifiExists) await powerOff();
+		log.info(`wifiExists -> ${wifiExists}`);
+		console.log();
+		if (!wifiExists) {
+			await powerOff();
+		}
+		res.status(200).send();
 	} catch (err) { log.err(err) }
 });
 

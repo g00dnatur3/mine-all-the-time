@@ -8,7 +8,7 @@ module.exports = {
             uri: url,
             json: true,
             resolveWithFullResponse: true,
-            timeout: 1000
+            timeout: 5000
         });
 	},
 
@@ -19,7 +19,7 @@ module.exports = {
             body: body,
             json: true,
             resolveWithFullResponse: true,
-            timeout: 1000
+            timeout: 5000
         });
 	}
 
