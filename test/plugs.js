@@ -105,7 +105,10 @@ const MONITOR_INTERVAL = 20; // seconds
 
 (async () => {
 	while (true) {
-		await doMonitorCycle();
+		try {
+			await doMonitorCycle();
+		}
+		catch (err) { log.err(err); console.log(); }
 		log.info(`sleeping for ${MONITOR_INTERVAL} seconds...`);
 		console.log();
 		await setTimeoutPromise(MONITOR_INTERVAL * 1000);
