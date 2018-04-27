@@ -1,5 +1,6 @@
 const fs = require('fs'),
 	  util = require('util'),
+	  exec = util.promisify(require('child_process').exec),
 	  express = require('express'),
       _powerOff = require('power-off'),
 	  config = require('./config'),
@@ -8,12 +9,6 @@ const fs = require('fs'),
 const app = express();
 
 const isWin = process.platform === 'win32';
-
-if (!isWin) {
-	// enable wake on lan
-	exec('sudo apt-get install -y ethtool && sudo ethtool -s eth0 wol g')
-	.catch(err => log.err(err));
-}
 
 app.get('/hello', (req, res) => {
 	log.info('== HELLO REQUESTED ==');
@@ -46,8 +41,6 @@ app.post('/shutdown', async (req, res) => {
 });
 
 async function hasWifi() {
-	const util = require('util')
-	exec = util.promisify(require('child_process').exec)
 	let wifi = false;
 	try {
 		if (isWin) {
@@ -62,4 +55,18 @@ async function hasWifi() {
 	return wifi
 }
 
-app.listen(3000, () => console.log('control-server listening on port 3000'))
+(async () => {
+	if (!isWin) {
+		log.info('== ENABLE WOL FOR UBUNTU ==');
+		// enable wake on lan
+		let result = await exec('ifconfig');
+		const iface = result.stdout.split(':')[0];
+		const cmd = `sudo apt-get install -y ethtool && sudo ethtool -s ${iface} wol g`;
+		log.info(`exec -> ${cmd}`);
+		result = await exec(cmd);
+		console.log(result.stdout);
+		log.info('== START MATT_SERVER ==');
+		app.listen(3000, () => console.log('matt-server listening on port 3000'))
+	}
+})().catch(err => log.err(err));
+
