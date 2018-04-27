@@ -31,12 +31,10 @@ app.post('/shutdown', async (req, res) => {
 	console.log();
 	try {
 		// ONLY SHUTDOWN IF NOT CONNTECTED VIA WIFI
-		const wifiExists = hasWifi();
+		const wifiExists = await hasWifi();
 		log.info(`wifiExists -> ${wifiExists}`);
 		console.log();
-		if (!wifiExists) {
-			await powerOff();
-		}
+		if (!wifiExists) await powerOff();
 		res.status(200).send();
 	} catch (err) { log.err(err) }
 });
