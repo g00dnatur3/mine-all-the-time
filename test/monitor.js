@@ -3,7 +3,6 @@ const fing = require('./fing'),
       fs = require('fs'),
       path = require('path'),
       util = require('util'),
-      exec = util.promisify(require('child_process').exec),
       setTimeoutPromise = util.promisify(setTimeout),
       log = require('../src/log')();
 
@@ -130,4 +129,4 @@ async function doMonitorCycle() {
 		console.log();
 		await setTimeoutPromise(MONITOR_INTERVAL * 1000);
 	}
-})().catch(err => info.err(err));
+})().catch(err => log.err(err));

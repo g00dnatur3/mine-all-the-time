@@ -1,6 +1,8 @@
 const { Client } = require('tplink-smarthome-api'),
       fs = require('fs'),
       path = require('path'),
+      util = require('util'),
+      setTimeoutPromise = util.promisify(setTimeout),
       log = require('../src/log')();
 
 const client = new Client();
@@ -38,15 +40,17 @@ function loadPlugs() {
 
 // Look for devices register and turn them on
 client.startDiscovery().on('plug-new', async (plug) => {
-	plug.setPowerState(true);
-	const sysinfo = await plug.getSysInfo();
-	const _plug = {
-		hwId: sysinfo.hwId,
-		name: sysinfo.alias,
-		ip: plug.host
-	};
-	powerPlugs[_plug.hwId] = _plug;
-	savePlugs();
+	try {
+		await plug.setPowerState(true);
+		const sysinfo = await plug.getSysInfo();
+		const _plug = {
+			hwId: sysinfo.hwId,
+			name: sysinfo.alias,
+			ip: plug.host
+		};
+		powerPlugs[_plug.hwId] = _plug;
+		savePlugs();	
+	} catch (err) { log.err(err); }
 });
 
 const MIN_WATTS = 600;
@@ -60,78 +64,45 @@ async function doMonitorCycle() {
 	const keys = Object.keys(powerPlugs);
 	for (let i=0; i<keys.length; i++) {
 		const plug = powerPlugs[keys[i]];
-		
-		const stats = await client.getPlug({host: plug.ip}).emeter.getRealtime();
-		
-//		const state = { watts: stats.power };
-//		
-//		if (state.watts > MIN_WATTS) {
-//			state.lastTimeAboveMinWatts = Date.now();
-//		}
-//		
-//		if (plug.state) {
-//			
-//			
-//			
-//		} else {
-//			plug.state = state
-//			state.lastTimeAboveMinWatts = Date.now();
-//		}
-//		
-
+		const plugApi = client.getPlug({host: plug.ip});
+		const stats = await plugApi.emeter.getRealtime();
+		if (stats.power < 40) continue; // do not manage wattage less than 40
 		if (plug.state) {
-			
 			const now = Date.now();
-			
 			if (stats.power < MIN_WATTS) {
-				
 				if (now - plug.state.lastTimeAboveMinWatts > SHUTDOWN_TIMEOUT) {
 					log.info('== SHUTDOWN_TIMEOUT TRIGGERED ==');
 					console.log();
+					await plugApi.setPowerState(false);
+					await plugApi.setPowerState(true);
+					delete plug.state;
 				}
-				
-					
+				plug.state.watts = stats.power
 			} else {
 				plug.state = {
 					watts: stats.power,
 					lastTimeAboveMinWatts: Date.now()
 				}
 			}
-			
 		} else {
 			plug.state = {
 				watts: stats.power,
 				lastTimeAboveMinWatts: Date.now()
 			}
 		}
-		
+		log.info('== PLUG UPDATED ==');
+		console.log(JSON.stringify(plug, null, 2));
+		console.log();
 	}
 }
 
-setTimeout(function() {
-	
-	doMonitorCycle().then(() => {
-		
-	});
+const MONITOR_INTERVAL = 20; // seconds
 
-	
-}, 5000);
-
-
-//client.getPlug({host: '192.168.1.118'}).then((plug) => {
-//	console.log(plug)
-//});
-
-//console.log(
-//		client.getPlug({host: '192.168.1.118'}).emeter.get_realtime
-//		)
-
-
-		
-//		console.log(client.getPlug({host: '192.168.1.118'}))
-
-//		client.getPlug({host: '192.168.1.118'}).emeter.getRealtime().then(blah => {
-//			console.log(blah)
-//		})
-		
-
+(async () => {
+	while (true) {
+		await doMonitorCycle();
+		log.info(`sleeping for ${MONITOR_INTERVAL} seconds...`);
+		console.log();
+		await setTimeoutPromise(MONITOR_INTERVAL * 1000);
+	}
+})().catch(err => log.err(err));
