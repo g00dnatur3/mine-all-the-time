@@ -16,12 +16,29 @@ const client = new Client();
 //  device.setPowerState(true);
 //});
 
+const plugs = {}
+
 // Look for devices, log to console, and turn them on
-//client.startDiscovery().on('device-new', (device) => {
-//
-//	console.log(device.emter)
-//  
-//});
+client.startDiscovery().on('plug-new', async (plug) => {
+
+	const sysinfo = await plug.getSysInfo();
+	
+//	plug.setPowerState(true);
+
+	console.log(plug)
+	
+	const _plug = {
+		hwId: sysinfo.hwId,
+		name: sysinfo.alias,
+		ip: plug.host
+	};
+	
+	plugs[_plug.hwId] = _plug;
+	
+	
+	
+  
+});
 
 //client.getPlug({host: '192.168.1.118'}).then((plug) => {
 //	console.log(plug)
@@ -31,10 +48,12 @@ const client = new Client();
 //		client.getPlug({host: '192.168.1.118'}).emeter.get_realtime
 //		)
 
-console.log(
 
-		client.getPlug({host: '192.168.1.118'}).emeter.getRealtime().then(blah => {
-			console.log(blah)
-		})
 		
-)
+//		console.log(client.getPlug({host: '192.168.1.118'}))
+
+//		client.getPlug({host: '192.168.1.118'}).emeter.getRealtime().then(blah => {
+//			console.log(blah)
+//		})
+		
+

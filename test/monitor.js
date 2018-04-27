@@ -39,11 +39,9 @@ function loadMiningNodes() {
 			log.err('!! FAILED TO LOAD MINING NODES')
 			log.err(err)
 			console.log();
-			return {};
 		}
-	} else {
-		return {};
 	}
+	return {};
 }
 
 
@@ -107,7 +105,7 @@ async function processNode(node) {
 	}
 }
 
-const MONITOR_INTERVAL = 10; // seconds
+const MONITOR_INTERVAL = 60; // seconds
 
 async function doMonitorCycle() {
 	console.log(Array(80).join('-'));
@@ -122,6 +120,7 @@ async function doMonitorCycle() {
 		await processNode(miningNodes[ip]);
 	}
 	log.info('== END MONITOR_CYCLE ==> ' + new Date());
+	console.log();
 }
 
 (async () => {
