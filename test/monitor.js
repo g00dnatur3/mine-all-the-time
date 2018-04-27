@@ -5,6 +5,7 @@ const fing = require('./fing'),
       exitHook = require('exit-hook'),
       util = require('util'),
       exec = util.promisify(require('child_process').exec),
+      setTimeoutPromise = util.promisify(setTimeout),
       log = require('../src/log')();
 
 const defaultConfig = require('./config');
@@ -32,7 +33,19 @@ function saveNodes() {
 function loadMiningNodes() {
 	if (fs.existsSync(miningNodesFile)) {
 		log.info(`loading nodes from -> ${miningNodesFile}`);
-		return require(miningNodesFile);
+		try {
+			const _nodes = require(miningNodesFile);
+			Object.keys(_nodes).forEach(key => {
+				_nodes[key].online = false;
+			});
+			return _nodes;	
+		}
+		catch (err) {
+			log.err('!! FAILED TO LOAD MINING NODES')
+			log.err(err)
+			console.log();
+			return {};
+		}
 	} else {
 		return {};
 	}
@@ -67,9 +80,19 @@ async function discoverMiningNodes() {
 }
 
 async function processNode(node) {
+	
+	log.info('== PROCESS_NODE ==> ' + node.ip);
+	console.log()
+	
 	const beginShutdown = node.shutdown.split('-')[0];
 	const endShutdown = node.shutdown.split('-')[1];
 	const currentHour = new Date().getHours();
+	
+	log.info('currentHour -> ' + currentHour);
+	log.info('beginShutdown -> ' + beginShutdown);
+	log.info('endShutdown -> ' + endShutdown);
+	console.log()
+	
 	if (currentHour >= beginShutdown && currentHour < endShutdown) {
 		// SEND REQUEST TO SHUT OFF COMPUTER
 		log.info('== SENDING SHUTDOWN REQUEST TO NODE -> ' + node.ip);
@@ -88,24 +111,28 @@ async function processNode(node) {
 	}
 }
 
-const MONITOR_INTERVAL = 120;
+const MONITOR_INTERVAL = 60; // seconds
 
-async function doMonitorCycleLoop() {
-	log.info('== START MONITOR_CYCLE ==> ' + new Date())
+async function doMonitorCycle() {
+	log.info('== START MONITOR_CYCLE ==> ' + new Date());
 	console.log();
-	await discoverMiningNodes()
-	log.info('== CURRENT MINING NODES ==> ' + new Date())
-	console.log(miningNodes)
-	console.log()
+	await discoverMiningNodes();
+	log.info('== CURRENT MINING NODES ==> ' + new Date());
+	console.log(miningNodes);
+	console.log();
 	for (ip in miningNodes) {
 		await processNode(miningNodes[ip]);
 	}
-	log.info('== END MONITOR_CYCLE ==> ' + new Date())
-	console.log()
-	//setTimeout(doMonitorCycleLoop, MONITOR_INTERVAL)
-	log.info(`sleeping for ${MONITOR_INTERVAL} seconds`);
-	await exec(`sleep ${MONITOR_INTERVAL}`);
-	await doMonitorCycleLoop();
+	log.info('== END MONITOR_CYCLE ==> ' + new Date());
 }
 
-doMonitorCycleLoop()
+(async () => {
+	while (true) {
+		await doMonitorCycle();
+		log.info(`sleeping for ${MONITOR_INTERVAL} seconds...`);
+		await setTimeoutPromise(MONITOR_INTERVAL * 1000);
+		console.log();
+		console.log(Array(80).join('-'));
+		console.log();
+	}
+})().catch(err => info.err(err));
