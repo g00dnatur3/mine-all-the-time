@@ -2,7 +2,6 @@ const fing = require('./fing'),
       http = require('./http'),
       fs = require('fs'),
       path = require('path'),
-      exitHook = require('exit-hook'),
       util = require('util'),
       exec = util.promisify(require('child_process').exec),
       setTimeoutPromise = util.promisify(setTimeout),
@@ -20,13 +19,9 @@ log.info('== LOADED MINING NODES ==')
 console.log(JSON.stringify(miningNodes, null, 2));
 console.log();
 
-exitHook(() => {
-	log.info('exitHook');
-	saveNodes();
-});
-
 function saveNodes() {
 	log.info(`saving nodes to -> ${miningNodesFile}`);
+	console.log();
 	fs.writeFileSync(miningNodesFile, JSON.stringify(miningNodes));
 }
 
@@ -77,6 +72,7 @@ async function discoverMiningNodes() {
 		}
 		console.log();
 	}
+	saveNodes();
 }
 
 async function processNode(node) {
@@ -111,9 +107,11 @@ async function processNode(node) {
 	}
 }
 
-const MONITOR_INTERVAL = 60; // seconds
+const MONITOR_INTERVAL = 10; // seconds
 
 async function doMonitorCycle() {
+	console.log(Array(80).join('-'));
+	console.log();
 	log.info('== START MONITOR_CYCLE ==> ' + new Date());
 	console.log();
 	await discoverMiningNodes();
@@ -130,9 +128,7 @@ async function doMonitorCycle() {
 	while (true) {
 		await doMonitorCycle();
 		log.info(`sleeping for ${MONITOR_INTERVAL} seconds...`);
+		console.log();
 		await setTimeoutPromise(MONITOR_INTERVAL * 1000);
-		console.log();
-		console.log(Array(80).join('-'));
-		console.log();
 	}
 })().catch(err => info.err(err));
