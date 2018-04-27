@@ -5,7 +5,9 @@ const fs = require('fs'),
 	  config = require('./config'),
 	  log = require('../src/log')();
 		  
-const app = express()
+const app = express();
+
+const isWin = process.platform === 'win32';
 
 app.get('/hello', (req, res) => {
 	res.send(JSON.stringify(config));
@@ -33,10 +35,20 @@ async function hasWifi() {
 	exec = util.promisify(require('child_process').exec)
 	let wifi = false;
 	try {
-		const result = await exec('sudo iwconfig | grep "ESSID"');
-		if (result.stdout) wifi = true;
+		if (isWin) {
+			const result = await exec('netsh wlan show interfaces');
+			const noWifiText = 'no wireless interface on the system';
+			if (result.stdout.indexOf(noWifiText) === -1) wifi = true;
+		} else {
+			const result = await exec('sudo iwconfig | grep "ESSID"');
+			if (result.stdout) wifi = true;
+		}
 	} catch (err) { log.err(`== NORMAL ERROR IF NO WIFI ==> ${err}`)}
 	return wifi
 }
 
-app.listen(3000, () => console.log('control-server listening on port 3000'))
+//app.listen(3000, () => console.log('control-server listening on port 3000'))
+
+hasWifi().then(wifi => {
+	console.log('wifi = ' + wifi);
+})
