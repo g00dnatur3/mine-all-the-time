@@ -76,8 +76,9 @@ async function doMonitorCycle() {
 					await plugApi.setPowerState(false);
 					await plugApi.setPowerState(true);
 					delete plug.state;
+				} else {
+					plug.state.watts = stats.power
 				}
-				plug.state.watts = stats.power
 			} else {
 				plug.state = {
 					watts: stats.power,
