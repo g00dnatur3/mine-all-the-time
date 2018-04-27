@@ -9,6 +9,12 @@ const app = express();
 
 const isWin = process.platform === 'win32';
 
+if (!isWin) {
+	// enable wake on lan
+	exec('sudo apt-get install -y ethtool && sudo ethtool -s eth0 wol g')
+	.catch(err => log.err(err));
+}
+
 app.get('/hello', (req, res) => {
 	log.info('== HELLO REQUESTED ==');
 	console.log();
