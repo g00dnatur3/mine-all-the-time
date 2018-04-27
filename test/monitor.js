@@ -86,22 +86,22 @@ async function processNode(node) {
 	log.info('endShutdown -> ' + endShutdown);
 	console.log()
 	
-	if (currentHour >= beginShutdown && currentHour < endShutdown) {
+	//if (currentHour >= beginShutdown && currentHour < endShutdown) {
 		// SEND REQUEST TO SHUT OFF COMPUTER
 		log.info('== SENDING SHUTDOWN REQUEST TO NODE -> ' + node.ip);
 		console.log();
 		try {
 			await http.doPOST(`http://${node.ip}:${port}/shutdown`)
 		} catch(err) { log.err(err); console.log(); }
-	}
-	else if (node.online === false) {
-		// SEND WOL MAGIC PACKET TO TURN ON COMPUTER
-		log.info('== SENDING WAKE-UP (WOL) TO NODE => ' + node.mac);
-		console.log()
-		try {
-			await fing.wakeUp(node.mac);
-		} catch (err) { log.err(err); }
-	}
+//	}
+//	else if (node.online === false) {
+//		// SEND WOL MAGIC PACKET TO TURN ON COMPUTER
+//		log.info('== SENDING WAKE-UP (WOL) TO NODE => ' + node.mac);
+//		console.log()
+//		try {
+//			await fing.wakeUp(node.mac);
+//		} catch (err) { log.err(err); }
+//	}
 }
 
 const MONITOR_INTERVAL = 60; // seconds
