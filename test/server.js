@@ -47,8 +47,4 @@ async function hasWifi() {
 	return wifi
 }
 
-//app.listen(3000, () => console.log('control-server listening on port 3000'))
-
-hasWifi().then(wifi => {
-	console.log('wifi = ' + wifi);
-})
+app.listen(3000, () => console.log('control-server listening on port 3000'))
