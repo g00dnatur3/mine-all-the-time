@@ -75,7 +75,25 @@ async function discoverMiningNodes() {
 async function processNode(node) {
 	
 	log.info('== PROCESS_NODE ==> ' + node.ip);
-	console.log()
+	console.log();
+	
+	const dayOfWeek = new Date().getDay();
+	log.info('dayOfWeek -> ' + dayOfWeek);
+	console.log();
+	
+	if (dayOfWeek === 0 || dayOfWeek === 6) {
+		log.info('== ITS THE WEEKEND BABY, MINE ALL THE TIME ==');
+		console.log();
+		if (node.online === false) {
+			// SEND WOL MAGIC PACKET TO TURN ON COMPUTER
+			log.info('== SENDING WAKE-UP (WOL) TO NODE => ' + node.mac);
+			console.log()
+			try {
+				await fing.wakeUp(node.mac);
+			} catch (err) { log.err(err); }
+		}
+		return;
+	}
 	
 	const beginShutdown = node.shutdown.split('-')[0];
 	const endShutdown = node.shutdown.split('-')[1];
