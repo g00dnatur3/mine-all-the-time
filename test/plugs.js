@@ -66,7 +66,7 @@ async function doMonitorCycle() {
 		const plug = powerPlugs[keys[i]];
 		const plugApi = client.getPlug({host: plug.ip});
 		const stats = await plugApi.emeter.getRealtime();
-		if (stats.power < 40) {
+		if (stats.power < 80) {
 			delete plug.state;
 			continue; // do not manage wattage less than 40
 		}
