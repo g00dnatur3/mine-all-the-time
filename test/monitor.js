@@ -122,7 +122,7 @@ async function processNode(node) {
 	}
 }
 
-const MONITOR_INTERVAL = 60; // seconds
+const MONITOR_INTERVAL = 90; // seconds
 
 async function doMonitorCycle() {
 	console.log(Array(80).join('-'));

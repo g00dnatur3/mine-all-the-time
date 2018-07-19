@@ -49,24 +49,32 @@ client.startDiscovery().on('plug-new', async (plug) => {
 			ip: plug.host
 		};
 		powerPlugs[_plug.hwId] = _plug;
-		savePlugs();	
+		savePlugs();
 	} catch (err) { log.err(err); }
 });
 
-const MIN_WATTS = 800;
+const MIN_WATTS = 1260;
 
 // if the power is below MIN_WATTS for a period longer than SHUTDOWN_TIMEOUT
 // then we shut off the power, assume miner crashed
-const SHUTDOWN_TIMEOUT = 150 * 1000;
+const SHUTDOWN_TIMEOUT = 90 * 1000;
 
-// monitor power consumption is not lower than 600W for more than 2mins
+const MAX_POWER = 1360;
+
+// monitor power consumption is not lower than MIN_WATTS for more than SHUTDOWN_TIMEOUT
 async function doMonitorCycle() {
 	const keys = Object.keys(powerPlugs);
 	for (let i=0; i<keys.length; i++) {
 		const plug = powerPlugs[keys[i]];
 		const plugApi = client.getPlug({host: plug.ip});
 		const stats = await plugApi.emeter.getRealtime();
-		if (stats.power < 10) {
+		
+		if (stats.power > MAX_POWER) {
+		    await plugApi.setPowerState(false);
+		    continue;
+                }
+
+                if (stats.power < 40) {
 			delete plug.state;
 			continue; // do not manage wattage less than 40
 		}
