@@ -18,7 +18,7 @@ console.log();
 function savePlugs() {
 	log.info(`saving plugs to -> ${powerPlugsFile}`);
 	console.log();
-	fs.writeFileSync(powerPlugsFile, JSON.stringify(powerPlugs));
+	fs.writeFileSync(powerPlugsFile, JSON.stringify(powerPlugs, null, 2));
 }
 
 function loadPlugs() {
@@ -98,6 +98,7 @@ async function doMonitorCycle() {
 			_maxPower = MAX_POWER_6
 			log.info('_minPower ==> ' + _minPower)
 			log.info('_maxPower ==> ' + _maxPower)
+			console.log()
 		}
 
 		if (NAMES_POWER_12.includes(plug.name)) {
@@ -106,10 +107,15 @@ async function doMonitorCycle() {
 			_maxPower = MAX_POWER_12
 			log.info('_minPower ==> ' + _minPower)
 			log.info('_maxPower ==> ' + _maxPower)
+			console.log()
 		}
 
 		if (!_minPower || !_maxPower) {
-			log.info('_minPower or _maxPower is null, continue...')
+			log.info(`_minPower or _maxPower is null - ${plug.name}, continue...`)
+			console.log()
+		    await plugApi.setPowerState(false);
+		    await setTimeoutPromise(2000);
+		    continue;
 		}
 
 		console.log()
@@ -117,17 +123,21 @@ async function doMonitorCycle() {
 		const plugApi = client.getPlug({host: plug.ip});
 		const stats = await plugApi.emeter.getRealtime();
 		
+        console.log()
+        log.info(`CURRENT_POWER ==> ${plug.name}: ${stats.power}w`)
+        console.log()
+
 		// ==============================
 		if (stats.power > _maxPower) {
 		// ==============================
+			log.info(`stats.power > _maxPower - ${plug.name}, continue...`)
+			console.log()
 		    await plugApi.setPowerState(false);
 		    await setTimeoutPromise(2000);
 		    continue;
         }
 
-        console.log()
-        log.info(`CURRENT_POWER ==> ${plug.name}: ${stats.power}w`)
-        console.log()
+
 
         if (stats.power < 40) {
 			delete plug.state;
