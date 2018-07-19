@@ -118,8 +118,6 @@ async function doMonitorCycle() {
 		    continue;
 		}
 
-		console.log()
-
 		const plugApi = client.getPlug({host: plug.ip});
 		const stats = await plugApi.emeter.getRealtime();
 		
@@ -136,8 +134,6 @@ async function doMonitorCycle() {
 		    await setTimeoutPromise(2000);
 		    continue;
         }
-
-
 
         if (stats.power < 40) {
 			delete plug.state;
@@ -179,7 +175,7 @@ async function doMonitorCycle() {
 	}
 }
 
-const MONITOR_INTERVAL = 35; // seconds
+const MONITOR_INTERVAL = 30; // seconds
 
 (async () => {
 	while (true) {
