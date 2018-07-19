@@ -44,45 +44,104 @@ client.startDiscovery().on('plug-new', async (plug) => {
 		await plug.setPowerState(true);
 		const sysinfo = await plug.getSysInfo();
 		const _plug = {
-			hwId: sysinfo.hwId,
+			hwId: sysinfo.deviceId,
 			name: sysinfo.alias,
 			ip: plug.host
 		};
+		// console.log()
+		// log.info(`>> NEW_PLUG_DISCOVERED >>`)
+		// console.log('=================================')
+		// console.log(sysinfo)
+		// console.log('=================================')
+		// console.log()
 		powerPlugs[_plug.hwId] = _plug;
 		savePlugs();
 	} catch (err) { log.err(err); }
 });
 
-const MIN_WATTS = 1260;
+const MIN_POWER_12 = 1280;
+const MAX_POWER_12 = 1360;
 
-// if the power is below MIN_WATTS for a period longer than SHUTDOWN_TIMEOUT
-// then we shut off the power, assume miner crashed
+const MIN_POWER_6 = 680;
+const MAX_POWER_6 = 760;
+
 const SHUTDOWN_TIMEOUT = 90 * 1000;
 
-const MAX_POWER = 1360;
+const NAMES_POWER_6 = [
+	'Etherminer3',
+	'Ethermine3'
+]
 
-// monitor power consumption is not lower than MIN_WATTS for more than SHUTDOWN_TIMEOUT
+const NAMES_POWER_12 = [
+	'Etherminer1',
+	'Ethemine1',
+	'Etherminer2',
+	'Ethemine2'
+]
+
 async function doMonitorCycle() {
 	const keys = Object.keys(powerPlugs);
 	for (let i=0; i<keys.length; i++) {
 		const plug = powerPlugs[keys[i]];
+
+		// console.log()
+		// console.log('==== PLUG ====')
+		// console.log(plug)
+		// console.log()
+
+		let _minPower = null
+		let _maxPower = null
+
+		if (NAMES_POWER_6.includes(plug.name)) {
+			log.info(`using *_POWER_6 (name=${plug.name})`)
+			_minPower = MIN_POWER_6
+			_maxPower = MAX_POWER_6
+			log.info('_minPower ==> ' + _minPower)
+			log.info('_maxPower ==> ' + _maxPower)
+		}
+
+		if (NAMES_POWER_12.includes(plug.name)) {
+			log.info(`using *_POWER_12 (name=${plug.name})`)
+			_minPower = MIN_POWER_12
+			_maxPower = MAX_POWER_12
+			log.info('_minPower ==> ' + _minPower)
+			log.info('_maxPower ==> ' + _maxPower)
+		}
+
+		if (!_minPower || !_maxPower) {
+			log.info('_minPower or _maxPower is null, continue...')
+		}
+
+		console.log()
+
 		const plugApi = client.getPlug({host: plug.ip});
 		const stats = await plugApi.emeter.getRealtime();
 		
-		if (stats.power > MAX_POWER) {
+		// ==============================
+		if (stats.power > _maxPower) {
+		// ==============================
 		    await plugApi.setPowerState(false);
+		    await setTimeoutPromise(2000);
 		    continue;
-                }
+        }
 
-                if (stats.power < 40) {
+        console.log()
+        log.info(`CURRENT_POWER ==> ${plug.name}: ${stats.power}w`)
+        console.log()
+
+        if (stats.power < 40) {
 			delete plug.state;
 			continue; // do not manage wattage less than 40
 		}
 		if (plug.state) {
 			const now = Date.now();
-			if (stats.power < MIN_WATTS) {
+
+			// ===============================
+			if (stats.power < _minPower) {
+			// ===============================
+
 				if (now - plug.state.lastTimeAboveMinWatts > SHUTDOWN_TIMEOUT) {
-					log.info('== SHUTDOWN_TIMEOUT TRIGGERED ==');
+					log.info(`== SHUTDOWN_TIMEOUT TRIGGERED ==> ${plug.name}`);
 					console.log();
 					await plugApi.setPowerState(false);
 					await setTimeoutPromise(2000);
@@ -91,6 +150,7 @@ async function doMonitorCycle() {
 				} else {
 					plug.state.watts = stats.power
 				}
+
 			} else {
 				plug.state = {
 					watts: stats.power,
@@ -109,7 +169,7 @@ async function doMonitorCycle() {
 	}
 }
 
-const MONITOR_INTERVAL = 30; // seconds
+const MONITOR_INTERVAL = 35; // seconds
 
 (async () => {
 	while (true) {
