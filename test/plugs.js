@@ -65,7 +65,7 @@ const MAX_POWER_12 = 1360;
 const MIN_POWER_6 = 680;
 const MAX_POWER_6 = 760;
 
-const SHUTDOWN_TIMEOUT = 90 * 1000;
+const SHUTDOWN_TIMEOUT = 95 * 1000;
 
 const NAMES_POWER_6 = [
 	'Etherminer3',
@@ -84,10 +84,7 @@ async function doMonitorCycle() {
 	for (let i=0; i<keys.length; i++) {
 		const plug = powerPlugs[keys[i]];
 
-		// console.log()
-		// console.log('==== PLUG ====')
-		// console.log(plug)
-		// console.log()
+		//if (plug.name !== 'Etherminer1') continue
 
 		let _minPower = null
 		let _maxPower = null
@@ -105,8 +102,6 @@ async function doMonitorCycle() {
 			log.info(`using *_POWER_12 (name=${plug.name})`)
 			_minPower = MIN_POWER_12
 			_maxPower = MAX_POWER_12
-			log.info('_minPower ==> ' + _minPower)
-			log.info('_maxPower ==> ' + _maxPower)
 			console.log()
 		}
 
@@ -125,50 +120,59 @@ async function doMonitorCycle() {
         log.info(`CURRENT_POWER ==> ${plug.name}: ${stats.power}w`)
         console.log()
 
+        const now = Date.now()
+
 		// ==============================
 		if (stats.power > _maxPower) {
 		// ==============================
-			log.info(`stats.power > _maxPower - ${plug.name}, continue...`)
+			log.info(`SHUTDOWN TRIGGERED ==> stats.power > _maxPower - ${plug.name} - ${new Date().toLocaleString()}, continue...`)
 			console.log()
 		    await plugApi.setPowerState(false);
 		    await setTimeoutPromise(2000);
 		    continue;
         }
 
-        if (stats.power < 40) {
+        if (stats.power < 60) {
+        	// computer is likely just booting up...
 			delete plug.state;
-			continue; // do not manage wattage less than 40
+			continue;
 		}
+		
 		if (plug.state) {
-			const now = Date.now();
-
+			
+			//console.log(`stats.power: ${stats.power} | _minPower: ${_minPower}`)
 			// ===============================
 			if (stats.power < _minPower) {
 			// ===============================
 
 				if (now - plug.state.lastTimeAboveMinWatts > SHUTDOWN_TIMEOUT) {
-					log.info(`== SHUTDOWN_TIMEOUT TRIGGERED ==> ${plug.name}`);
+
+					log.info(`== SHUTDOWN_TIMEOUT TRIGGERED ==> ${plug.name} - ${new Date().toLocaleString()}`);
 					console.log();
 					await plugApi.setPowerState(false);
 					await setTimeoutPromise(2000);
 					await plugApi.setPowerState(true);
 					delete plug.state;
+
 				} else {
 					plug.state.watts = stats.power
 				}
 
-			} else {
+			} 
+			else {
 				plug.state = {
 					watts: stats.power,
-					lastTimeAboveMinWatts: Date.now()
+					lastTimeAboveMinWatts: now
 				}
 			}
+
 		} else {
 			plug.state = {
 				watts: stats.power,
-				lastTimeAboveMinWatts: Date.now()
+				lastTimeAboveMinWatts: now
 			}
 		}
+		
 		log.info('== PLUG UPDATED ==');
 		console.log(JSON.stringify(plug, null, 2));
 		console.log();
