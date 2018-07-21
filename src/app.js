@@ -40,8 +40,8 @@ function gpuCount() {
 }
 
 async function setOverclock(gpu) {
-    await runCmd('nvidia-settings', `-a [GPU:${gpu}]/GPUGraphicsClockOffset[3]=40`);
-    await runCmd('nvidia-settings', `-a [gpu:${gpu}]/GPUMemoryTransferRateOffset[3]=400`);
+    await runCmd('nvidia-settings', `-a [GPU:${gpu}]/GPUGraphicsClockOffset[3]=80`);
+    await runCmd('nvidia-settings', `-a [gpu:${gpu}]/GPUMemoryTransferRateOffset[3]=800`);
 }
 
 async function setPowerLimit(gpu) {
@@ -70,10 +70,10 @@ const restartNetwork = (() => {
 
 async function startMinning() {
     const cmd = miners[argv.miner],
-          server = '192.168.1.27',
-          user = `${argv.worker}`,
+          server = 'us1-zcash.flypool.org',
+          user = `${walletId}`,
           pass = '2000',
-          port = 8000;
+          port = 3333;
     let args = `--server ${server} --user ${user} --pass ${pass} --port ${port}`
     if (argv.miner === 'ewbf') {
         args = args.concat(' --fee 0');
